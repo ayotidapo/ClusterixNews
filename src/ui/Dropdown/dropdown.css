@@ -1,0 +1,15 @@
+@reference "@/index.css";
+
+@layer components {
+	.dropdown__trigger {
+		@apply relative inline-flex cursor-pointer;
+	}
+
+	.dropdown__trigger > .dropdown__content {
+		@apply opacity-0 invisible min-h-40  absolute top-full md:w-max w-full shadow-lg border border-gray-200 rounded-sm z-50 bg-white;
+	}
+
+	.dropdown__trigger:focus-within > .dropdown__content {
+		@apply opacity-100 visible;
+	}
+}
