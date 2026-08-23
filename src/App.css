@@ -14,14 +14,12 @@
 	background-color: #e8a33d;
 }
 
-/* .dropdown__trigger {
-	@apply relative inline-flex cursor-pointer;
+.btn {
+	@apply px-2 py-1 border-slim border-primary-text rounded-sm cursor-pointer transition-[scale];
 }
-
-.dropdown__trigger > .dropdown__content {
-	@apply opacity-0 invisible h-40  absolute top-full w-full shadow-lg border border-gray-200 rounded-sm z-50 bg-white;
+.btn:active {
+	@apply scale-95;
 }
-.dropdown__trigger:focus,
-.dropdown__trigger:focus-within > .dropdown__content {
-	@apply opacity-100 visible;
-} */
+.btn.active {
+	@apply bg-brand border-transparent text-white;
+}

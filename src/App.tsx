@@ -1,17 +1,59 @@
 import '@/App.css';
 import DropDown from './ui/Dropdown';
-import { DayPicker, type DateRange } from 'react-day-picker';
-import 'react-day-picker/dist/style.css';
-import { useState } from 'react';
-import { format } from 'date-fns';
 
+import NewsCard from './components/NewsCard';
+import DatePicker from './components/DatePicker';
+import Icon from './ui/Icon';
+import Modal from './ui/Modal';
+import { useState } from 'react';
+import Checkbox from './ui/CheckBox';
+//import.meta.env.VITE_API_URL
 function App() {
-	const [range, setRange] = useState<DateRange | undefined>();
-	console.log({ range });
-	const { from = '', to = '' } = range || {};
-	const formatStyle = "do 'of' MMMM, yyyy";
+	const [open, setOpen] = useState(false);
 	return (
 		<>
+			{open && (
+				<Modal onClose={() => setOpen(false)}>
+					<div className='p-5 rounded-xl  bg-white lg:w-[40vw]  w-[90vw]'>
+						<h5 className='text-lg font-bold subpixel-antialiased'>
+							Feed preferences
+						</h5>
+						<small className='text-primary-text text-base'>
+							Choose what shows up in yourfeed by default
+						</small>
+						<section className='space-y-3.5 mt-3.5'>
+							<div className='space-y-1'>
+								<h6 className='font-semibold'>Sources</h6>
+								<div className='flex gap-2'>
+									<Checkbox label='bbc' value='bbc' />
+									<Checkbox label='news api' value='bbc' />
+									<Checkbox label='new york times' value='bbc' />
+								</div>
+							</div>
+							<div className='space-y-1'>
+								<h6 className='font-semibold'>Categories</h6>
+								<div className='flex gap-2'>
+									<Checkbox label='tech' value='bbc' />
+									<Checkbox label='politics' value='bbc' />
+									<Checkbox label='business' value='bbc' />
+								</div>
+							</div>
+							<div className='space-y-1'>
+								<h6 className='font-semibold'>Authors</h6>
+								<div className='flex gap-2'>
+									<Checkbox label='donald trump' value='bbc' />
+									<Checkbox label='ayomide oti' value='bbc' />
+									<Checkbox label='mark zuckerberg' value='bbc' />
+								</div>
+							</div>
+						</section>
+						<div className='flex justify-end gap-2 mt-4'>
+							<button className='btn'>Cancel</button>
+							<button className='btn active'>Save preferences</button>
+						</div>
+					</div>
+				</Modal>
+			)}
 			<header className='header_ fixed inset-0 bg-black py-2 flex md:flex-row flex-col md:h-[56px] h-20 items-center z-500 s'>
 				<div className='flex justify-between relative z-200 bg-black  page__pad'>
 					<h1 className=' text-logo'>ClusterixNews</h1>
@@ -22,6 +64,13 @@ function App() {
 						<span>LIVE FROM BBC </span> <span>LIVE FROM BBC</span>
 						<span>LIVE FROM BBC</span>
 					</div>
+				</div>
+				<div
+					className='flex justify-between relative z-200 bg-black text-white pr-5 gap-1 cursor-pointer'
+					onClick={() => setOpen(true)}
+				>
+					<Icon id='gear' />
+					<small>Preferences</small>
 				</div>
 			</header>
 			<main className='md:pt-14 pt-20'>
@@ -51,38 +100,7 @@ function App() {
 						</div>
 					</section>
 
-					<DropDown
-						className='mx-auto lg:w-auto w-full'
-						triggerComp={
-							<input
-								type='text'
-								className='w-95 text-brand  '
-								placeholder='Filter by date..'
-								value={
-									from
-										? `${format(from, formatStyle)} - ${format(to, formatStyle)}`
-										: ``
-								}
-							/>
-						}
-					>
-						<DayPicker
-							className='absolute pl-2.5'
-							classNames={{
-								day_button: 'focus:outline-none focus-visible:outline-none ',
-								range_middle: 'text-blue-600',
-								range_start:
-									'bg-blue-600 rounded-full border-none [&>button]:text-white ',
-								range_end: 'bg-blue-600 rounded-full [&>button]:text-white ',
-								day: 'h-9 w-9 text-center text-lato',
-							}}
-							mode='range'
-							selected={range}
-							onSelect={setRange}
-							numberOfMonths={2} // 👈 Renders two calendars side-by-side
-							pagedNavigation // 👈 Forces next/prev buttons to flip exactly 2 months at a time
-						/>
-					</DropDown>
+					<DatePicker />
 					<div className=' lg:ml-auto ml-0'>
 						<input
 							type='text'
@@ -95,44 +113,8 @@ function App() {
 
 				<section className='lg:w-4/5 w-full grid md:grid-cols-[repeat(auto-fill,minmax(320px,1fr))] mx-auto gap-5 mt-10 mb-20 '>
 					{[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map(() => (
-						<article className='shadow-md p-4  space-y-2 cursor-pointer hover:scale-105 transition-[scale] duration-1000'>
-							<div className='flex text-xs items-center gap-2 text-primary-text'>
-								<span>BUSINESS</span>
-								<span>&#8226;</span>
-								<span>12M AGO</span>
-							</div>
-							<h5 className='font-bold text-lg line-clamp-2 h-14'>
-								Central banks signal coordinated pause as inflation cools faster
-								than forecast Central banks signal coordinated pause as
-								inflation cools faster than forecast
-							</h5>
-							<p className='line-clamp-3 h-18 text-primary-text'>
-								Policymakers across three major economies hinted at holding
-								rates steady, citing a sharper drop in core inflation.
-							</p>
-							<div className='flex justify-between text-base mt-2'>
-								<span className='text-brand'>Reuters</span>
-								<span className=' text-primary-text subpixel-antialiased italic'>
-									Reuters
-								</span>
-							</div>
-						</article>
+						<NewsCard />
 					))}
-
-					{/* <div className='animate-pulse space-y-3.5 h-56 flex  flex-col'>
-						<div className='mt-2 h-4 w-1/2 rounded bg-gray-200'></div>
-						<div className='h-8 w-full rounded bg-gray-200'></div>
-						<div className='h-10 w-9/10 rounded bg-gray-200'></div>
-
-						<div className='h-4 w-full rounded bg-gray-200'></div>
-
-						<div className='mt-2 h-4 w-1/2 rounded bg-gray-200'></div>
-
-						<div className='flex justify-between mt-auto'>
-							<div className='mt-2 h-4 w-10 rounded bg-gray-200'></div>
-							<div className='mt-2 h-4 w-12 rounded bg-gray-200'></div>
-						</div>
-					</div> */}
 				</section>
 			</main>
 		</>
