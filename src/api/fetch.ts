@@ -10,7 +10,7 @@ const Fetch = async (url: string, query: Record<string, any> = {}) => {
 	const apiBase = apiBaseConfig[url];
 	const uri = apiBase.uri;
 	const strippedQuery = stripEmpty(query);
-	console.log({ apiBase });
+	console.log({ apiBase, strippedQuery, m: uri });
 	const params = new URLSearchParams({
 		[apiBase.apiParams]: apiBase.value,
 		...strippedQuery,

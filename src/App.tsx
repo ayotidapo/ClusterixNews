@@ -1,3 +1,4 @@
+/* eslint-disable react-hooks/set-state-in-effect */
 import '@/App.css';
 import DropDown from './ui/Dropdown';
 
@@ -12,21 +13,31 @@ import Fetch from './api/fetch';
 import type { ObjectType } from './utils/types';
 import type { DateRange } from 'react-day-picker';
 import { dedupeBy } from './utils/helper';
+import { format } from 'date-fns';
 
 //import.meta.env.VITE_API_URL
 function App() {
 	const [open, setOpen] = useState(false);
 	const [category, setCategory] = useState('');
-	const [init, setInit] = useState(0);
+	const [initialized, setInitialized] = useState(false);
+	const [allCategories, setAllCategories] = useState([]);
+	const [allSources, setAllSources] = useState([]);
 	const [sources, setSources] = useState<string[]>([]);
 	const [date, setDate] = useState<DateRange | undefined>();
+	const [search, setSearch] = useState<string>('');
+	const [debouncedSearch, setDebouncedSearch] = useState<string>('');
+	const { from, to } = date || {};
 
-	const { data: guardianData } = useQuery({
-		queryKey: ['guardian', category],
+	const { data: guardianData, isPending: guardianLoading } = useQuery({
+		queryKey: ['guardian', category, sources, from, to, debouncedSearch],
 		queryFn: () =>
 			Fetch('guardian', {
 				'show-fields': 'headline,trailText,thumbnail,byline',
 				section: category,
+				sources: '', //sources.join(','),
+				'from-date': from ? format(from, 'yyyy-MM-dd') : '',
+				'to-date': to ? format(to, 'yyyy-MM-dd') : '',
+				q: debouncedSearch,
 			}),
 		select: data => ({
 			limit: data?.pageSize,
@@ -38,16 +49,24 @@ function App() {
 				title: item?.webTitle,
 				summary: item?.fields?.trailText,
 				detailsUrl: item?.webUrl,
-				category: item?.sectionName,
+				category: item?.sectionId,
 				source: 'The Guardian',
 				sectionId: item?.sectionId, //use this q=
 				author: item?.fields?.byline,
 			})),
 		}),
 	});
-	const { data: newTimesData } = useQuery({
-		queryKey: ['new_times', category],
-		queryFn: () => Fetch('new_times', { fq: `section_name:${category}` }),
+	console.log({ search, debouncedSearch, j: 909888 });
+	const { data: newTimesData, isPending: newTimesLoading } = useQuery({
+		queryKey: ['new_times', category, sources, from, to, debouncedSearch],
+		queryFn: () =>
+			Fetch('new_times', {
+				fq: category ? `section_name:${category}` : '',
+				sources: sources.join(','),
+				begin_date: from ? format(from, 'yyyyMMdd') : '',
+				end_date: from ? format(from, 'yyyyMMdd') : '',
+				q: debouncedSearch,
+			}),
 		select: data => ({
 			limit: 10,
 			totalItems: data?.metadata?.hits,
@@ -65,10 +84,17 @@ function App() {
 		}),
 	});
 
-	const { data: newApiData } = useQuery({
-		queryKey: ['new_api', category],
+	const { data: newApiData, isPending: newApiLoading } = useQuery({
+		queryKey: ['new_api', category, sources, from, to, debouncedSearch],
 		queryFn: () =>
-			Fetch('new_api', { q: category || 'technology', pageSize: 10, page: 1 }),
+			Fetch('new_api', {
+				q: debouncedSearch || category || 'technology',
+				pageSize: 10,
+				page: 1,
+				domains: sources.join(','),
+				from: from ? format(from, 'yyyy-MM-dd') : '',
+				to: to ? format(to, 'yyyy-MM-dd') : '',
+			}),
 		select: data => ({
 			limit: 10,
 			totalItems: data?.totalResults,
@@ -85,7 +111,8 @@ function App() {
 			})),
 		}),
 	});
-	console.log({ guardianData, newTimesData, newApiData, category });
+
+	console.log({ date }, 'POOWOWOO');
 
 	const memoisedData = useMemo(
 		() =>
@@ -105,7 +132,7 @@ function App() {
 		return [...new Set(uniqueSources)];
 	}, [memoisedData]);
 
-	const memoisedCategory = useMemo(() => {
+	const memoisedCategories = useMemo(() => {
 		const mappedCategory = memoisedData.map((item: ObjectType) => ({
 			label: item?.category,
 			value: item.itemName === 'guardian' ? item?.sectionId : item?.category,
@@ -118,9 +145,36 @@ function App() {
 		setDate(date);
 	};
 
-	const onSetSources = (source: string) => {
-		setSources(prev => [...prev, source]);
+	const onSetSources = (e: React.ChangeEvent<HTMLInputElement>) => {
+		const { checked, value } = e.target;
+
+		if (checked) {
+			setSources(prev => [...prev, value]);
+		} else {
+			setSources([...sources.filter(source => source !== value)]);
+		}
 	};
+
+	const isLoading = guardianLoading || newTimesLoading || newApiLoading;
+
+	useEffect(() => {
+		if (isLoading || initialized) return;
+
+		if (memoisedSources.length > 0) {
+			setAllSources(memoisedSources);
+		}
+
+		if (memoisedCategories.length > 0) {
+			setAllCategories(memoisedCategories);
+		}
+
+		setInitialized(true);
+	}, [isLoading, initialized, memoisedSources, memoisedCategories]);
+
+	useEffect(() => {
+		const handler = setTimeout(() => setDebouncedSearch(search), 2000);
+		return () => clearTimeout(handler);
+	}, [search]);
 
 	console.log({
 		memoisedData,
@@ -129,8 +183,15 @@ function App() {
 		newApiData,
 		date,
 		category,
-		memoisedCategory,
+		memoisedCategories,
+		memoisedSources,
+		allSources,
 	});
+
+	const onChangeText = e => {
+		const { value } = e.target;
+		setSearch(value);
+	};
 	return (
 		<>
 			{open && (
@@ -201,15 +262,21 @@ function App() {
 							triggerComp={
 								<div className='flex border-slim border-primary-text rounded-3xl px-4 py-1.5 gap-2.5 items-center'>
 									<span className='text-xs text-primary-text'>CATEGORY</span>
-									<span className='text-sm text-brand subpixel-antialiased'>
-										{' '}
-										Tech
+									<span className='text-sm text-brand subpixel-antialiased capitalize'>
+										{category || 'All'}
 									</span>
 								</div>
 							}
 						>
 							<div className='flex flex-col w-50 max-h-80 overflow-auto '>
-								{memoisedCategory?.map(item => (
+								<button
+									key='all'
+									className='inline-flex hover:bg-[#cde2fb] px-3.5 py-1 cursor-pointer'
+									onClick={() => setCategory('')}
+								>
+									All
+								</button>
+								{allCategories?.map(item => (
 									<button
 										key={item?.value}
 										className='inline-flex hover:bg-[#cde2fb] px-3.5 py-1 cursor-pointer'
@@ -224,21 +291,18 @@ function App() {
 						<div>
 							<h6 className=''>Sources:</h6>
 							<div className='flex gap-2 flex-wrap max-h-18 overflow-auto'>
-								{memoisedSources.map((source: string) => (
-									<button
+								{allSources.map((source: string) => (
+									<Checkbox
 										key={source}
-										className='rounded-3xl border-slim px-2.5 h-8 inline-flex items-center text-sm  cursor-pointer text-white bg-brand border-transparent capitalize'
-										onClick={onSetSources}
-									>
-										{source}
-									</button>
+										label={source}
+										value={source}
+										onChange={onSetSources}
+										checked={sources.includes(source)}
+									/>
 								))}
 								{/* <button className='rounded-3xl border-slim border-primary-text px-2.5 h-8 inline-flex items-center text-sm text-primary-text cursor-pointer'>
 								Reuters
 							</button> */}
-								<button className='rounded-3xl border-slim px-2.5 h-8 inline-flex items-center text-sm  cursor-pointer text-white bg-brand border-transparent '>
-									BBC
-								</button>
 							</div>
 						</div>
 					</section>
@@ -249,6 +313,8 @@ function App() {
 							type='text'
 							className='rounded-3xl  min-w-60'
 							placeholder='Search headlines...'
+							value={search}
+							onChange={onChangeText}
 						/>
 					</div>
 				</div>
