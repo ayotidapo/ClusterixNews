@@ -4,10 +4,19 @@ import { DayPicker, type DateRange } from 'react-day-picker';
 import 'react-day-picker/dist/style.css';
 import DropDown from '@/ui/Dropdown';
 
-const DatePicker = () => {
+interface Props {
+	onChangeDate: (date: DateRange | undefined) => void;
+}
+
+const DatePicker: React.FC<Props> = ({ onChangeDate }) => {
 	const [range, setRange] = useState<DateRange | undefined>();
 	const { from = '', to = '' } = range || {};
 	const formatStyle = "do 'of' MMMM, yyyy";
+
+	const onSelect = (date: DateRange | undefined) => {
+		setRange(date);
+		onChangeDate(date);
+	};
 	return (
 		<DropDown
 			className='mx-auto lg:w-auto w-full'
@@ -36,7 +45,7 @@ const DatePicker = () => {
 				}}
 				mode='range'
 				selected={range}
-				onSelect={setRange}
+				onSelect={onSelect}
 				numberOfMonths={2} // 👈 Renders two calendars side-by-side
 				pagedNavigation // 👈 Forces next/prev buttons to flip exactly 2 months at a time
 			/>

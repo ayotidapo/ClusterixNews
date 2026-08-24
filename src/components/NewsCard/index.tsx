@@ -1,26 +1,34 @@
-interface Props {}
+import { timeAgo } from '@/utils/helper';
+import type { ObjectType } from '@/utils/types';
 
-const NewsCard: React.FC<Props> = () => {
+interface Props {
+	item: ObjectType;
+	category?: string;
+}
+
+// publishDate: item?.publishedAt,
+// 				title: item?.title,
+// 				summary: item?.content,
+// 				detailsUrl: item?.url,
+// 				category: item?.section_name,
+// 				source: item?.source?.name,
+// 				author: item?.author,
+const NewsCard: React.FC<Props> = ({ item, category }) => {
 	return (
 		<article className='shadow-md p-4  space-y-2 cursor-pointer hover:scale-105 transition-[scale] duration-1000'>
 			<div className='flex text-xs items-center gap-2 text-primary-text'>
-				<span>BUSINESS</span>
+				<span className='capitalize'>
+					{item?.category || category?.replace('-', ' ') || 'News'}
+				</span>
 				<span>&#8226;</span>
-				<span>12M AGO</span>
+				<span>{timeAgo(item?.publishDate)}</span>
 			</div>
-			<h5 className='font-bold text-lg line-clamp-2 h-14'>
-				Central banks signal coordinated pause as inflation cools faster than
-				forecast Central banks signal coordinated pause as inflation cools
-				faster than forecast
-			</h5>
-			<p className='line-clamp-3 h-18 text-primary-text'>
-				Policymakers across three major economies hinted at holding rates
-				steady, citing a sharper drop in core inflation.
-			</p>
+			<h5 className='font-bold text-lg line-clamp-2 h-14'>{item?.title}</h5>
+			<p className='line-clamp-3 h-18 text-primary-text'>{item?.summary}</p>
 			<div className='flex justify-between text-base mt-2'>
-				<span className='text-brand'>Reuters</span>
-				<span className=' text-primary-text subpixel-antialiased italic'>
-					Reuters
+				<span className='text-brand'>{item?.source}</span>
+				<span className=' text-primary-text subpixel-antialiased italic truncate w-32 text-right'>
+					{item?.author}
 				</span>
 			</div>
 		</article>
