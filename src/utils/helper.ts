@@ -13,9 +13,9 @@ export const apiBaseConfig = {
 		apiParams: 'api-key',
 		value: import.meta.env.VITE_NEWTIMES_KEY,
 	},
-	new_api: {
+	news_api: {
 		uri: `https://newsapi.org/v2/everything`,
-		url: `new_api`,
+		url: `news_api`,
 		apiParams: 'apiKey',
 		value: import.meta.env.VITE_NEWSAPI_KEY,
 	},

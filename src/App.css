@@ -20,6 +20,9 @@
 .btn:active {
 	@apply scale-95;
 }
+.btn:disabled {
+	@apply scale-100 opacity-25 cursor-not-allowed;
+}
 .btn.active {
 	@apply bg-brand border-transparent text-white;
 }

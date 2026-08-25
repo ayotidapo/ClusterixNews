@@ -26,11 +26,11 @@ body {
 }
 
 h1 {
-	@apply md:text-4xl text-3xl;
+	@apply lg:text-4xl text-2xl;
 }
 
 .page__pad {
-	@apply lg:px-12  lg:pr-4 px-4;
+	@apply lg:px-12  lg:pr-8 px-4;
 }
 
 input[type='text'] {

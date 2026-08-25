@@ -3,10 +3,10 @@
 .checkbox {
 	display: none;
 }
-.checkbox + span {
-	@apply border-slim border-primary-text rounded-md min-w-15 inline-flex justify-center items-center cursor-pointer px-2 py-1 capitalize text-sm md:text-base;
+.checkers {
+	@apply border-slim border-primary-text rounded-md min-w-15 max-w-50 truncate  inline-block justify-center items-center cursor-pointer px-2 py-1 capitalize text-sm md:text-base;
 }
 
-.checkbox:checked + span {
+.checkbox:checked + .checkers {
 	@apply bg-[#cde2fb] border border-[#86b6ef] text-brand;
 }

@@ -1,22 +1,28 @@
 import './checkbox.css';
 
 interface Props {
+	name: string;
 	label: string;
 	value: string;
 	checked?: boolean;
 	onChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
+	className?: string;
+	type?: 'checkbox' | 'radio';
 }
-const Checkbox: React.FC<Props> = ({ label, value, checked, onChange }) => {
+const Checkbox: React.FC<Props> = props => {
+	const { label, name, value, checked, onChange, className = '' } = props;
+
 	return (
-		<label className='flex'>
+		<label>
 			<input
+				name={name}
 				type='checkbox'
 				className='checkbox'
 				value={value}
 				checked={checked}
 				onChange={onChange}
 			/>
-			<span>{label}</span>
+			<span className={`checkers  ${className}`}>{label}</span>
 		</label>
 	);
 };
