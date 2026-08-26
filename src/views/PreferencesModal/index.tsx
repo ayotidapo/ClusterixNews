@@ -13,7 +13,7 @@ interface Props {
 	setPreferences: React.Dispatch<React.SetStateAction<IPreferences>>;
 	setOpen: React.Dispatch<React.SetStateAction<boolean>>;
 	onSavePreferences: () => void;
-	onReset: () => void;
+	onClearPreference: () => void;
 	onChangePreferences: (e: React.ChangeEvent<HTMLInputElement>) => void;
 }
 
@@ -23,7 +23,7 @@ const PreferencesModal: React.FC<Props> = props => {
 	if (!props.open) return null;
 	return (
 		<Modal onClose={() => props.setOpen(false)}>
-			<div className='p-5 rounded-xl  bg-white lg:w-[40vw]  w-[90vw]'>
+			<div className='p-5 rounded-xl  bg-white lg:w-[40vw]  w-[90vw'>
 				<h5 className='text-lg font-bold subpixel-antialiased'>
 					Feed preferences
 				</h5>
@@ -33,7 +33,7 @@ const PreferencesModal: React.FC<Props> = props => {
 				<section className='space-y-3.5 mt-3.5'>
 					<div className='space-y-1'>
 						<h6 className='font-semibold'>Sources</h6>
-						<div className='prefer__box'>
+						<div className='prefer_box'>
 							{allSources?.map((source: string) => (
 								<Checkbox
 									name='sources'
@@ -77,10 +77,13 @@ const PreferencesModal: React.FC<Props> = props => {
 					</div>
 				</section>
 				<div className='flex justify-end gap-2 mt-4'>
-					<button className='btn' onClick={props.onReset}>
+					<button className='btn' onClick={props.onClearPreference}>
 						Cancel
 					</button>
-					<button className='btn active' onClick={props.onSavePreferences}>
+					<button
+						className='btn active subpixel-antialiased'
+						onClick={props.onSavePreferences}
+					>
 						Save preferences
 					</button>
 				</div>

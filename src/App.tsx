@@ -15,6 +15,7 @@ import { dedupeBy } from './utils/helper';
 import PreferencesModal from './views/PreferencesModal';
 import useGetNewsAggregator from './hooks/useGetNewsAggregator';
 import DropDownFilter from './views/DropDownFilter';
+import EmptyState from './views/EmptyState';
 
 function App() {
 	const queryClient = useQueryClient();
@@ -47,7 +48,7 @@ function App() {
 		} else {
 			pref[name] = pref[name]?.filter((pf: string) => pf !== value);
 		}
-
+		setDate(undefined);
 		setPreferences({ ...pref });
 	};
 
@@ -149,7 +150,14 @@ function App() {
 		memoisedCategories,
 		memoisedAuthors,
 	]);
-
+	console.log({
+		memoisedSources,
+		allSources,
+		memoisedCategories,
+		allCategories,
+		memoisedAuthors,
+		allAuthors,
+	});
 	useEffect(() => {
 		const handler = setTimeout(() => setDebouncedSearch(search), 2000);
 		return () => clearTimeout(handler);
@@ -167,11 +175,11 @@ function App() {
 		setOpen(false);
 	};
 
-	const onReset = () => {
+	const onClearPreference = () => {
 		setOpen(false);
 		localStorage.removeItem('saved_preferences');
 		setPreferences({});
-		setSources([]);
+		// setSources([]);
 
 		queryClient.invalidateQueries({
 			predicate: query =>
@@ -181,6 +189,13 @@ function App() {
 		});
 
 		alert('Preference clered from localstorage');
+	};
+
+	const onReset = () => {
+		setSources([]);
+		setCategory('');
+		setDate(undefined);
+		setSearch('');
 	};
 
 	useEffect(() => {
@@ -193,7 +208,7 @@ function App() {
 	}, []);
 
 	return (
-		<>
+		<div className=' h-full '>
 			<PreferencesModal
 				open={open}
 				setOpen={setOpen}
@@ -202,7 +217,7 @@ function App() {
 				allSources={allSources}
 				preferences={preferences}
 				setPreferences={setPreferences}
-				onReset={onReset}
+				onClearPreference={onClearPreference}
 				onSavePreferences={onSavePreferences}
 				onChangePreferences={onChangePreferences}
 			/>
@@ -227,7 +242,7 @@ function App() {
 					<small className='md:text-base text-sm'>Preferences</small>
 				</div>
 			</header>
-			<main className='md:pt-14 pt-20'>
+			<main className='md:pt-14 pt-20 flex flex-col min-h-full pb-20'>
 				<div className='flex lg:flex-nowrap flex-wrap items-start gap-4 mt-10 page__pad justify-between'>
 					<section className='flex lg:flex-row flex-col gap-7 items-center lg:justify-start justify-between lg:max-w-1/2 flex-wrap'>
 						<DropDownFilter
@@ -279,17 +294,20 @@ function App() {
 					</div>
 				</div>
 
-				<section className='lg:w-4/5 w-full grid md:grid-cols-[repeat(auto-fill,minmax(320px,1fr))] mx-auto gap-5 mt-10 mb-20 '>
-					{isFetching &&
-						[...new Array(10).fill('')].map((_x: string, i: number) => (
-							<NewsSkeleton key={i} />
-						))}
-					{memoisedData.map(item => (
-						<NewsCard item={item} key={item?.id} category={category} />
-					))}
+				<section className='lg:w-4/5 w-full grid md:grid-cols-[repeat(auto-fill,minmax(320px,1fr))] mx-auto gap-5 mt-10  '>
+					{isFetching || isLoading
+						? [...new Array(10).fill('')].map((_x: string, i: number) => (
+								<NewsSkeleton key={i} />
+							))
+						: memoisedData.map(item => (
+								<NewsCard item={item} key={item?.id} category={category} />
+							))}
 				</section>
+				{!isFetching && !isLoading && memoisedData?.length < 1 && (
+					<EmptyState onReset={onReset} />
+				)}
 			</main>
-		</>
+		</div>
 	);
 }
 

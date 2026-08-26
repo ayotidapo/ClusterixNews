@@ -1,7 +1,7 @@
 @reference "@/index.css";
 
 .prefer_box {
-	@apply flex gap-2 flex-wrap max-h-50 overflow-y-auto border-slim border-mauve-300 p-2 rounded-md;
+	@apply flex gap-2 flex-wrap max-h-50 overflow-y-auto border-slim border-mauve-200 p-2 rounded-md;
 }
 
 .marque > span {
@@ -14,16 +14,17 @@
 	border-radius: 50%;
 	background-color: #e8a33d;
 }
-
-.btn {
-	@apply px-2 py-1 border-slim border-primary-text rounded-sm cursor-pointer transition-[scale];
-}
-.btn:active {
-	@apply scale-95;
-}
-.btn:disabled {
-	@apply scale-100 opacity-25 cursor-not-allowed;
-}
-.btn.active {
-	@apply bg-brand border-transparent text-white;
+@layer components {
+	.btn {
+		@apply px-2 py-1 border-slim border-primary-text rounded-sm cursor-pointer transition-[scale];
+	}
+	.btn:active {
+		@apply scale-95;
+	}
+	.btn:disabled {
+		@apply scale-100 opacity-25 cursor-not-allowed;
+	}
+	.btn.active {
+		@apply bg-brand border-transparent text-white;
+	}
 }
