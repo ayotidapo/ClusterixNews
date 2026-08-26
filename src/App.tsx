@@ -228,7 +228,7 @@ function App() {
 				</div>
 			</header>
 			<main className='md:pt-14 pt-20'>
-				<div className='flex lg:flex-nowrap flex-wrap items-start gap-4 mt-10 page__pad   '>
+				<div className='flex lg:flex-nowrap flex-wrap items-start gap-4 mt-10 page__pad justify-between'>
 					<section className='flex lg:flex-row flex-col gap-7 items-center lg:justify-start justify-between lg:max-w-1/2 flex-wrap'>
 						<DropDownFilter
 							options={allCategories}
@@ -244,7 +244,7 @@ function App() {
 							className='absolute top-1/2 -translate-y-1/2 right-1'
 						/>
 					</div>
-					<div className='lg:ml-auto ml-0 relative'>
+					<div className='ml-0 relative'>
 						<input
 							type='text'
 							className='rounded-3xl md:w-80 min-w-60 text-brand'
@@ -292,5 +292,5 @@ function App() {
 		</>
 	);
 }
-//<div className='flex lg:flex-nowrap flex-wrap items-start gap-4 mt-10 page__pad   '>
+
 export default App;

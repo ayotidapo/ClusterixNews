@@ -2,11 +2,21 @@ import Fetch from '@/api/fetch';
 import type {
 	GuardianResponse,
 	INewsItems,
+	IPreferences,
 	NewsApiResponse,
 	NewTimesResponse,
 } from '@/utils/types';
 import { useQuery } from '@tanstack/react-query';
 import { format } from 'date-fns';
+
+interface IGetNewsAggregatorParams {
+	category: string;
+	sources: string[];
+	from: Date | undefined;
+	to: Date | undefined;
+	debouncedSearch: string;
+	preferences: IPreferences;
+}
 
 const useGetNewsAggregator = ({
 	category,
@@ -15,7 +25,7 @@ const useGetNewsAggregator = ({
 	to,
 	debouncedSearch,
 	preferences,
-}) => {
+}: IGetNewsAggregatorParams) => {
 	const qKeys = {
 		category,
 		sources,
