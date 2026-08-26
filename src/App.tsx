@@ -1,6 +1,5 @@
 /* eslint-disable react-hooks/set-state-in-effect */
 import '@/App.css';
-import DropDown from './ui/Dropdown';
 import { useQueryClient } from '@tanstack/react-query';
 import NewsCard, { NewsSkeleton } from './components/NewsCard';
 import DatePicker from './components/DatePicker';
@@ -8,20 +7,14 @@ import Icon from './ui/Icon';
 
 import { useEffect, useMemo, useState } from 'react';
 import Checkbox from './ui/CheckBox';
-import { useQuery } from '@tanstack/react-query';
-import Fetch from './api/fetch';
-import type {
-	GuardianResponse,
-	INewsItems,
-	IPreferences,
-	NewsApiResponse,
-	NewTimesResponse,
-	TOptions,
-} from './utils/types';
+
+import type { IPreferences, TOptions } from './utils/types';
 import type { DateRange } from 'react-day-picker';
 import { dedupeBy } from './utils/helper';
-import { format } from 'date-fns';
+
 import PreferencesModal from './views/PreferencesModal';
+import useGetNewsAggregator from './hooks/useGetNewsAggregator';
+import DropDownFilter from './views/DropDownFilter';
 
 function App() {
 	const queryClient = useQueryClient();
@@ -39,8 +32,6 @@ function App() {
 	const [preferences, setPreferences] = useState<IPreferences>({});
 
 	const { from, to } = date || {};
-
-	const qKeys = { category, sources, from, to, debouncedSearch, preferences };
 
 	const hasPreference = Object.keys(preferences).some(
 		key => preferences[key]?.length > 0
@@ -60,116 +51,26 @@ function App() {
 		setPreferences({ ...pref });
 	};
 
-	const {
-		data: guardianData,
-		isPending: guardianLoading,
-		isFetching: guardianFetching,
-	} = useQuery<GuardianResponse, Error, INewsItems>({
-		queryKey: ['guardian', qKeys],
-		queryFn: () => {
-			return Fetch('guardian', {
-				'show-fields': 'headline,trailText,thumbnail,byline',
-				section: category || preferences?.category,
-				sources: '', //Guardian has no source field or its equivalent,
-				'from-date': from ? format(from, 'yyyy-MM-dd') : '',
-				'to-date': to ? format(to, 'yyyy-MM-dd') : '',
-				q: debouncedSearch,
-				tag: preferences?.author,
-			});
-		},
-		select: data => ({
-			limit: data?.pageSize,
-			totalItems: data?.total,
-			items: data?.response?.results?.map(item => ({
-				itemName: 'guardian',
-				id: item?.id,
-				publishDate: item?.webPublicationDate,
-				title: item?.webTitle,
-				summary: item?.fields?.trailText,
-				detailsUrl: item?.webUrl,
-				category: item?.sectionId,
-				source: 'The Guardian',
-				sectionId: item?.sectionId, //use this q=
-				author: item?.fields?.byline,
-			})),
-		}),
+	const nAggregator = useGetNewsAggregator({
+		category,
+		sources,
+		from,
+		to,
+		debouncedSearch,
+		preferences,
 	});
 
 	const {
-		data: newTimesData,
-		isPending: newTimesLoading,
-		isFetching: newTimesFetching,
-		// refetch: refetchNewTimes,
-	} = useQuery<NewTimesResponse, Error, INewsItems>({
-		queryKey: ['new_times', qKeys],
-		queryFn: () => {
-			const category_ = category || preferences?.category;
-			const author = preferences?.author;
-			const filters = [
-				category_ && `section_name:"${category}"`,
-				author && `byline:"${author}"`,
-			].filter(Boolean);
-
-			return Fetch('new_times', {
-				fq: filters.join(' AND '),
-				sources: (sources || preferences.sources)?.join(','),
-				begin_date: from ? format(from, 'yyyyMMdd') : '',
-				end_date: from ? format(from, 'yyyyMMdd') : '',
-				q: debouncedSearch,
-			});
-		},
-		select: data => ({
-			limit: 10,
-			totalItems: data?.metadata?.hits,
-			items: data?.response?.docs?.map(item => ({
-				itemName: 'new times',
-				id: item?._id,
-				publishDate: item?.pub_date,
-				title: item?.headline?.main,
-				summary: item?.abstract,
-				detailsUrl: item?.web_url,
-				category: item?.section_name,
-				source: item?.source,
-				author: item?.byline?.original,
-			})),
-		}),
-	});
-
-	const {
-		data: newApiData,
-		isPending: newApiLoading,
-		isFetching: newApiFetching,
-	} = useQuery<NewsApiResponse, Error, INewsItems>({
-		queryKey: ['news_api', qKeys],
-		queryFn: () => {
-			const category_ = category || preferences?.category;
-
-			return Fetch('news_api', {
-				q: debouncedSearch || category_ || 'technology',
-				pageSize: 10,
-				page: 1,
-				domains: (sources || preferences.sources)?.join(','),
-				from: from ? format(from, 'yyyy-MM-dd') : '',
-				to: to ? format(to, 'yyyy-MM-dd') : '',
-				author: preferences?.author,
-			});
-		},
-		select: data => ({
-			limit: 10,
-			totalItems: data?.totalResults,
-			items: data?.articles?.map(item => ({
-				itemName: 'new api',
-				id: item?.title,
-				publishDate: item?.publishedAt,
-				title: item?.title,
-				summary: item?.content,
-				detailsUrl: item?.url,
-				category: item?.section_name,
-				source: new URL(item.url).hostname.replace(/^www\./, ''),
-				author: item?.author,
-			})),
-		}),
-	});
+		guardianData,
+		guardianLoading,
+		guardianFetching,
+		newTimesData,
+		newTimesLoading,
+		newTimesFetching,
+		newApiData,
+		newApiLoading,
+		newApiFetching,
+	} = nAggregator;
 
 	const memoisedData = useMemo(
 		() =>
@@ -218,6 +119,10 @@ function App() {
 		}
 	};
 
+	const onSelectCategory = (value: string) => {
+		setCategory(value);
+	};
+
 	const isLoading = guardianLoading || newTimesLoading || newApiLoading;
 	const isFetching = guardianFetching || newTimesFetching || newApiFetching;
 
@@ -254,7 +159,7 @@ function App() {
 		const { value } = e.target;
 		setSearch(value);
 	};
-	console.log({ hasPreference, preferences });
+
 	const onSavePreferences = () => {
 		if (!hasPreference) return alert('Select atleast one preference');
 		localStorage.setItem('saved_preferences', JSON.stringify(preferences));
@@ -274,9 +179,7 @@ function App() {
 					query.queryKey[0] as string
 				),
 		});
-		// refetchGuardian();
-		// refetchNewTimes();
-		// refetchNewsApi();
+
 		alert('Preference clered from localstorage');
 	};
 
@@ -325,67 +228,56 @@ function App() {
 				</div>
 			</header>
 			<main className='md:pt-14 pt-20'>
-				<div className='flex lg:flex-nowrap flex-wrap items-center gap-4 mt-10 page__pad   '>
-					<section className='flex lg:flex-row flex-col gap-5 items-center lg:justify-start justify-between lg:w-auto w-full'>
-						<DropDown
-							triggerComp={
-								<div className='flex border-slim border-primary-text rounded-3xl px-4 py-1.5 gap-2.5 items-center'>
-									<span className='text-xs text-primary-text'>CATEGORY</span>
-									<span className='text-sm text-brand subpixel-antialiased capitalize'>
-										{category || 'All'}
-									</span>
-								</div>
-							}
-						>
-							<div className='flex flex-col w-50 max-h-80 overflow-auto '>
-								<button
-									key='all'
-									className='inline-flex hover:bg-[#cde2fb] px-3.5 py-1 cursor-pointer'
-									onClick={() => setCategory('')}
-								>
-									All
-								</button>
-								{allCategories?.map(item => (
-									<button
-										key={item?.value}
-										className='inline-flex hover:bg-[#cde2fb] px-3.5 py-1 cursor-pointer'
-										onClick={() => setCategory(item?.value)}
-									>
-										{item?.label}
-									</button>
-								))}
-							</div>
-						</DropDown>
-
-						<div className='p-2.5 pt-0.5 rouded-sm shadow-sm'>
-							<h6 className=''>Sources:</h6>
-							<div className='flex gap-2 flex-wrap max-h-18 overflow-auto'>
-								{allSources.map((source: string) => (
-									<Checkbox
-										name='sources'
-										key={source}
-										label={source}
-										value={source}
-										onChange={onSetSources}
-										checked={sources.includes(source)}
-									/>
-								))}
-							</div>
-						</div>
+				<div className='flex lg:flex-nowrap flex-wrap items-start gap-4 mt-10 page__pad   '>
+					<section className='flex lg:flex-row flex-col gap-7 items-center lg:justify-start justify-between lg:max-w-1/2 flex-wrap'>
+						<DropDownFilter
+							options={allCategories}
+							onSelect={onSelectCategory}
+							value={category}
+						/>
 					</section>
 
-					<DatePicker onChangeDate={onChangeDate} />
-					<div className=' lg:ml-auto ml-0'>
+					<div className='relative flex items-center '>
+						<DatePicker onChangeDate={onChangeDate} />
+						<Icon
+							id='calendar'
+							className='absolute top-1/2 -translate-y-1/2 right-1'
+						/>
+					</div>
+					<div className='lg:ml-auto ml-0 relative'>
 						<input
 							type='text'
-							className='rounded-3xl  min-w-60 text-brand'
+							className='rounded-3xl md:w-80 min-w-60 text-brand'
 							placeholder='Type to search...'
 							value={search}
 							onChange={onChangeText}
 						/>
+						{search && (
+							<Icon
+								id='x'
+								width={18}
+								height={18}
+								className='absolute right-1 top-1/2 -translate-y-1/2 cursor-pointer'
+								onClick={() => setSearch('')}
+							/>
+						)}
 					</div>
 				</div>
-				<hr className='mt-7   border-slim border-[#dfdfdf] ' />
+				<div className='p-2.5 pt-0.5 rouded-sm shadow-sm w-full page__pad mt-7 pb-4'>
+					<h6 className='subpixel-antialiased'>Sources:</h6>
+					<div className='flex gap-2 flex-wrap max-h-18 lg:w-3/5 overflow-auto mt-1'>
+						{allSources.map((source: string) => (
+							<Checkbox
+								name='sources'
+								key={source}
+								label={source}
+								value={source}
+								onChange={onSetSources}
+								checked={sources.includes(source)}
+							/>
+						))}
+					</div>
+				</div>
 
 				<section className='lg:w-4/5 w-full grid md:grid-cols-[repeat(auto-fill,minmax(320px,1fr))] mx-auto gap-5 mt-10 mb-20 '>
 					{isFetching &&
@@ -400,5 +292,5 @@ function App() {
 		</>
 	);
 }
-
+//<div className='flex lg:flex-nowrap flex-wrap items-start gap-4 mt-10 page__pad   '>
 export default App;

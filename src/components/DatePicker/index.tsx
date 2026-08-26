@@ -19,11 +19,11 @@ const DatePicker: React.FC<Props> = ({ onChangeDate }) => {
 	};
 	return (
 		<DropDown
-			className='mx-auto lg:w-auto w-full'
+			className='mx-auto lg:w-auto w-full date__pickr'
 			triggerComp={
 				<input
 					type='text'
-					className='w-95 text-brand  '
+					className='w-95 text-brand cursor-pointer'
 					placeholder='Filter by date..'
 					value={
 						from
