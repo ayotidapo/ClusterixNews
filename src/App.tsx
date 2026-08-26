@@ -38,8 +38,6 @@ function App() {
 		key => preferences[key]?.length > 0
 	);
 
-	console.log({ hasPreference, preferences });
-
 	const onChangePreferences = (e: React.ChangeEvent<HTMLInputElement>) => {
 		const { checked, name, value } = e.target;
 		const pref = { ...preferences };
@@ -150,14 +148,7 @@ function App() {
 		memoisedCategories,
 		memoisedAuthors,
 	]);
-	console.log({
-		memoisedSources,
-		allSources,
-		memoisedCategories,
-		allCategories,
-		memoisedAuthors,
-		allAuthors,
-	});
+
 	useEffect(() => {
 		const handler = setTimeout(() => setDebouncedSearch(search), 2000);
 		return () => clearTimeout(handler);
@@ -201,7 +192,7 @@ function App() {
 	useEffect(() => {
 		const savedPreferences = localStorage.getItem('saved_preferences');
 		const initPrefernces = savedPreferences ? JSON.parse(savedPreferences) : {};
-		// console.log({ initPrefernces });
+
 		setSources(initPrefernces?.sources || []);
 		setCategory(initPrefernces?.category?.[0] || '');
 		setPreferences(initPrefernces);
