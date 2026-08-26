@@ -158,3 +158,87 @@ clusterix-news-app Start an Existing Container
 If the container has already been created and you only stopped it:
 
 docker start clusterix-news-app
+
+## Stop the Container
+
+```bash
+docker stop clusterix-news-app
+```
+
+## Start an Existing Container
+
+If the container has already been created and you only stopped it:
+
+```bash
+docker start clusterix-news-app
+```
+
+## Update the Docker Application
+
+When you change application code or environment variables, rebuild the image and
+recreate the container:
+
+```bash
+docker build --no-cache -t clusterix-news .
+docker rm -f clusterix-news-app
+docker run --name clusterix-news-app -p 8080:80 clusterix-news
+```
+
+`docker rm -f` removes the existing container so that the new container is
+created from the newly built image.
+
+## Docker Development vs Local Development
+
+For normal development, use Vite directly:
+
+```bash
+npm run dev
+```
+
+Then access:
+
+```text
+http://localhost:5173
+```
+
+This provides fast hot reloading.
+
+Use Docker when you want to test the production build:
+
+```text
+http://localhost:8080
+```
+
+## Docker Commands Quick Reference
+
+### Build
+
+```bash
+docker build --no-cache -t clusterix-news .
+```
+
+### Run
+
+```bash
+docker run --name clusterix-news-app -p 8080:80 clusterix-news
+```
+
+### Stop
+
+```bash
+docker stop clusterix-news-app
+```
+
+### Start
+
+```bash
+docker start clusterix-news-app
+```
+
+### Rebuild After Code or `.env` Changes
+
+```bash
+docker build --no-cache -t clusterix-news .
+docker rm -f clusterix-news-app
+docker run --name clusterix-news-app -p 8080:80 clusterix-news
+```
