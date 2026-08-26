@@ -5,8 +5,8 @@ import { apiBaseConfig, stripEmpty } from '@/utils/helper';
 // 	| 'https://content.guardianapis.com/search'
 // 	| 'https://api.nytimes.com/svc/search/v2/articlesearch.json'
 // 	| 'https://newsapi.org/v2/everything';
-
-const Fetch = async (url: string, query: Record<string, any> = {}) => {
+type Source = 'guardian' | 'new_times' | 'news_api';
+const Fetch = async (url: Source, query: Record<string, any> = {}) => {
 	const apiBase = apiBaseConfig[url];
 	const uri = apiBase.uri;
 	const strippedQuery = stripEmpty(query);

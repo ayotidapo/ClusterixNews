@@ -1,6 +1,7 @@
 @reference "@/index.css";
 
-.header_ {
+.prefer_box {
+	@apply flex gap-2 flex-wrap max-h-50 overflow-y-auto border-slim border-mauve-300 p-2 rounded-md;
 }
 
 .marque > span {

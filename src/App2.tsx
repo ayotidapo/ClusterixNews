@@ -5,7 +5,7 @@ import { useQueryClient } from '@tanstack/react-query';
 import NewsCard, { NewsSkeleton } from './components/NewsCard';
 import DatePicker from './components/DatePicker';
 import Icon from './ui/Icon';
-
+import Modal from './ui/Modal';
 import { useEffect, useMemo, useState } from 'react';
 import Checkbox from './ui/CheckBox';
 import { useQuery } from '@tanstack/react-query';
@@ -64,17 +64,23 @@ function App() {
 		data: guardianData,
 		isPending: guardianLoading,
 		isFetching: guardianFetching,
+		// refetch: refetchGuardian,
 	} = useQuery<GuardianResponse, Error, INewsItems>({
 		queryKey: ['guardian', qKeys],
 		queryFn: () => {
+			let _preferences = { ...preferences };
+			const { author, ...rest } = preferences;
+			if (hasPreference) _preferences = { ...rest, tag: author };
+
 			return Fetch('guardian', {
 				'show-fields': 'headline,trailText,thumbnail,byline',
-				section: category || preferences?.category,
-				sources: '', //Guardian has no source field or its equivalent,
+				section: category || _preferences?.category,
+				sources: '', //sources.join(','),
 				'from-date': from ? format(from, 'yyyy-MM-dd') : '',
 				'to-date': to ? format(to, 'yyyy-MM-dd') : '',
 				q: debouncedSearch,
-				tag: preferences?.author,
+				author:
+				..._preferences,
 			});
 		},
 		select: data => ({
@@ -103,19 +109,18 @@ function App() {
 	} = useQuery<NewTimesResponse, Error, INewsItems>({
 		queryKey: ['new_times', qKeys],
 		queryFn: () => {
-			const category_ = category || preferences?.category;
-			const author = preferences?.author;
-			const filters = [
-				category_ && `section_name:"${category}"`,
-				author && `byline:"${author}"`,
-			].filter(Boolean);
+			let _preferences = { ...preferences };
+			const { author, ...rest } = preferences;
+			if (hasPreference)
+				_preferences = { ...rest, fq: author ? `byline${author}` : '' };
 
 			return Fetch('new_times', {
-				fq: filters.join(' AND '),
-				sources: (sources || preferences.sources)?.join(','),
+				fq: category ? `section_name:${category}` : '',
+				sources: sources.join(','),
 				begin_date: from ? format(from, 'yyyyMMdd') : '',
 				end_date: from ? format(from, 'yyyyMMdd') : '',
 				q: debouncedSearch,
+				..._preferences,
 			});
 		},
 		select: data => ({
@@ -139,19 +144,23 @@ function App() {
 		data: newApiData,
 		isPending: newApiLoading,
 		isFetching: newApiFetching,
+		// refetch: refetchNewsApi,
 	} = useQuery<NewsApiResponse, Error, INewsItems>({
 		queryKey: ['news_api', qKeys],
 		queryFn: () => {
-			const category_ = category || preferences?.category;
+			let _preferences = { ...preferences };
+			const { sources, category, ...rest } = preferences;
+			if (hasPreference)
+				_preferences = { ...rest, domains: sources?.join(','), q: category };
 
 			return Fetch('news_api', {
-				q: debouncedSearch || category_ || 'technology',
+				q: debouncedSearch || category || 'technology',
 				pageSize: 10,
 				page: 1,
-				domains: (sources || preferences.sources)?.join(','),
+				domains: sources?.join(','),
 				from: from ? format(from, 'yyyy-MM-dd') : '',
 				to: to ? format(to, 'yyyy-MM-dd') : '',
-				author: preferences?.author,
+				..._preferences,
 			});
 		},
 		select: data => ({
@@ -254,9 +263,8 @@ function App() {
 		const { value } = e.target;
 		setSearch(value);
 	};
-	console.log({ hasPreference, preferences });
-	const onSavePreferences = () => {
-		if (!hasPreference) return alert('Select atleast one preference');
+
+	const onSavePrefernces = () => {
 		localStorage.setItem('saved_preferences', JSON.stringify(preferences));
 		alert('Preference saved to localstorage');
 		setOpen(false);
@@ -292,18 +300,86 @@ function App() {
 	return (
 		<>
 			<PreferencesModal
-				open={open}
-				setOpen={setOpen}
 				allCategories={allCategories}
 				allAuthors={allAuthors}
 				allSources={allSources}
+				hasPreference={hasPreference}
 				preferences={preferences}
 				setPreferences={setPreferences}
 				onReset={onReset}
-				onSavePreferences={onSavePreferences}
+				onSavePreferences={onSavePrefernces}
 				onChangePreferences={onChangePreferences}
 			/>
-
+			{open && (
+				<Modal onClose={() => setOpen(false)}>
+					{/* <div className='p-5 rounded-xl  bg-white lg:w-[40vw]  w-[90vw]'>
+						<h5 className='text-lg font-bold subpixel-antialiased'>
+							Feed preferences
+						</h5>
+						<small className='text-primary-text text-base'>
+							Choose what shows up in yourfeed by default
+						</small>
+						<section className='space-y-3.5 mt-3.5'>
+							<div className='space-y-1'>
+								<h6 className='font-semibold'>Sources</h6>
+								<div className='flex gap-2 flex-wrap max-h-50 overflow-y-auto border-slim border-mauve-300 p-2 rounded-md'>
+									{allSources?.map((source: string) => (
+										<Checkbox
+											name='sources'
+											key={source}
+											label={source}
+											value={source}
+											onChange={onChangePreferences}
+											checked={preferences?.sources?.includes(source)}
+										/>
+									))}
+								</div>
+							</div>
+							<div className='space-y-1'>
+								<h6 className='font-semibold'>Categories</h6>
+								<div className='flex gap-2 flex-wrap max-h-50 overflow-y-auto border-slim border-mauve-300 p-2 rounded-md'>
+									{allCategories?.map(item => (
+										<Checkbox
+											name='category'
+											key={item?.value}
+											label={item?.label}
+											value={item?.value}
+											onChange={onChangePreferences}
+											checked={preferences?.category?.includes(item?.value)}
+										/>
+									))}
+								</div>
+							</div>
+							<div className='space-y-1'>
+								<h6 className='font-semibold'>Authors</h6>
+								<div className='flex gap-2 flex-wrap max-h-50 overflow-y-auto border-slim border-mauve-300 p-2 rounded-md'>
+									{allAuthors?.map(author => (
+										<Checkbox
+											label={author}
+											value={author}
+											name='author'
+											onChange={onChangePreferences}
+											checked={preferences?.author?.includes(author)}
+										/>
+									))}
+								</div>
+							</div>
+						</section>
+						<div className='flex justify-end gap-2 mt-4'>
+							<button className='btn' onClick={onReset}>
+								Cancel
+							</button>
+							<button
+								className='btn active'
+								onClick={onSavePrefernces}
+								disabled={!hasPreference}
+							>
+								Save preferences
+							</button>
+						</div>
+					</div> */}
+				</Modal>
+			)}
 			<header className='header_ fixed inset-0 bg-black py-2 flex md:h-[56px] h-20 md:items-center items-baseline z-500 md:text-base text-xs'>
 				<div className='flex justify-between relative z-200 bg-black  page__pad'>
 					<h1 className=' text-logo '>ClusterixNews</h1>
