@@ -68,13 +68,13 @@ VITE_NEWSAPI_KEY=your_newsapi_api_key
 
 ## Local Development
 
-### Install dependencies
+### Install Dependencies
 
 ```bash
 npm install
 ```
 
-### Start the Vite development server
+### Start the Development Server
 
 ```bash
 npm run dev
@@ -85,6 +85,9 @@ The application will be available at:
 ```text
 http://localhost:5173
 ```
+
+Vite provides hot reloading during development, so changes to the source code
+are reflected automatically.
 
 ## Production Build
 
@@ -100,7 +103,7 @@ The production files are generated in:
 dist/
 ```
 
-You can preview the production build with:
+To preview the production build locally:
 
 ```bash
 npm run preview
@@ -112,7 +115,7 @@ The project uses a multi-stage Docker build.
 
 ### Docker Architecture
 
-The Dockerfile uses two stages:
+The Dockerfile uses two stages.
 
 #### Build Stage
 
@@ -138,42 +141,45 @@ From the project root:
 docker build --no-cache -t clusterix-news .
 ```
 
-This creates an image named:
+This creates a Docker image named:
 
 ```text
 clusterix-news
 ```
 
-Run the Container docker run --name clusterix-news-app -p 8080:80 clusterix-news
+### Run the Container
+
+```bash
+docker run --name clusterix-news-app -p 8080:80 clusterix-news
+```
 
 The application will then be available at:
 
+```text
 http://localhost:8080
+```
 
 The port mapping is:
 
-localhost:8080 → container port 80 Stop the Container docker stop
-clusterix-news-app Start an Existing Container
+```text
+localhost:8080 → container port 80
+```
 
-If the container has already been created and you only stopped it:
-
-docker start clusterix-news-app
-
-## Stop the Container
+### Stop the Container
 
 ```bash
 docker stop clusterix-news-app
 ```
 
-## Start an Existing Container
+### Start an Existing Container
 
-If the container has already been created and you only stopped it:
+If the container has already been created and was only stopped:
 
 ```bash
 docker start clusterix-news-app
 ```
 
-## Update the Docker Application
+### Update the Docker Application
 
 When you change application code or environment variables, rebuild the image and
 recreate the container:
@@ -209,6 +215,9 @@ Use Docker when you want to test the production build:
 http://localhost:8080
 ```
 
+The Docker version builds the application and serves the generated static files
+through the production container.
+
 ## Docker Commands Quick Reference
 
 ### Build
@@ -242,3 +251,15 @@ docker build --no-cache -t clusterix-news .
 docker rm -f clusterix-news-app
 docker run --name clusterix-news-app -p 8080:80 clusterix-news
 ```
+
+## Environment Variables
+
+| Variable            | Description                | Required |
+| ------------------- | -------------------------- | -------- |
+| `VITE_GUARDIAN_KEY` | The Guardian API key       | Yes      |
+| `VITE_NEWTIMES_KEY` | The New York Times API key | Yes      |
+| `VITE_NEWSAPI_KEY`  | NewsAPI key                | Yes      |
+
+## License
+
+This project is for demonstration and assessment purposes.
